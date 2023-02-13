@@ -1,14 +1,15 @@
-import React, {forwardRef, useImperativeHandle} from 'react';
-import {View, Text, TouchableOpacity, FlatList} from 'react-native';
+import React, { forwardRef, useImperativeHandle } from 'react';
+import { View, TouchableOpacity, VirtualizedList } from 'react-native';
+import { Text } from 'react-native-paper';
 import styles from './styles';
-import {isExist} from './helpers/isExist';
+import { isExist } from './helpers/isExist';
 import Input from './components/Input';
 import DropdownOverlay from './components/DropdownOverlay';
 import DropdownModal from './components/DropdownModal';
 import DropdownWindow from './components/DropdownWindow';
-import {useSelectDropdown} from './hooks/useSelectDropdown';
-import {useLayoutDropdown} from './hooks/useLayoutDropdown';
-import {useRefs} from './hooks/useRefs';
+import { useSelectDropdown } from './hooks/useSelectDropdown';
+import { useLayoutDropdown } from './hooks/useLayoutDropdown';
+import { useRefs } from './hooks/useRefs';
 
 const SelectDropdown = (
   {
@@ -45,18 +46,21 @@ const SelectDropdown = (
     search /* boolean */,
     searchInputStyle /* style object for search input */,
     searchInputTxtColor /* text color for search input */,
-    searchInputTxtStyle /* text style for search input */,
     searchPlaceHolder /* placeholder text for search input */,
     searchPlaceHolderColor /* text color for search input placeholder */,
     renderSearchInputLeftIcon /* function returns React component for search input icon */,
     renderSearchInputRightIcon /* function returns React component for search input icon */,
     onChangeSearchInputText /* function callback when the search input text changes, this will automatically disable the dropdown's interna search to be implemented manually outside the component  */,
+    // My Customization
+    leftIcon = null /**adding option for left icon on dropdown */,
+    titleText = null,
+    errors = null,
   },
   ref,
 ) => {
   const disabledInternalSearch = !!onChangeSearchInputText;
   /* ******************* hooks ******************* */
-  const {dropdownButtonRef, dropDownFlatlistRef} = useRefs();
+  const { dropdownButtonRef, dropDownFlatlistRef } = useRefs();
   const {
     dataArr, //
     selectedItem,
@@ -120,33 +124,35 @@ const SelectDropdown = (
   /* ******************** Render Methods ******************** */
   const renderSearchView = () => {
     return (
-      search && (
-        <Input
-          searchViewWidth={buttonLayout.w}
-          value={searchTxt}
-          valueColor={searchInputTxtColor}
-          placeholder={searchPlaceHolder}
-          placeholderTextColor={searchPlaceHolderColor}
-          onChangeText={txt => {
-            setSearchTxt(txt);
-            disabledInternalSearch && onChangeSearchInputText(txt);
-          }}
-          inputStyle={searchInputStyle}
-          inputTextStyle={searchInputTxtStyle}
-          renderLeft={renderSearchInputLeftIcon}
-          renderRight={renderSearchInputRightIcon}
-        />
-      )
+      <>
+        {titleText}
+        {search && (
+          <Input
+            searchViewWidth={buttonLayout.w}
+            value={searchTxt}
+            valueColor={searchInputTxtColor}
+            placeholder={searchPlaceHolder}
+            placeholderTextColor={searchPlaceHolderColor}
+            onChangeText={txt => {
+              setSearchTxt(txt);
+              disabledInternalSearch && onChangeSearchInputText(txt);
+            }}
+            inputStyle={searchInputStyle}
+            renderLeft={renderSearchInputLeftIcon}
+            renderRight={renderSearchInputRightIcon}
+          />
+        )}
+      </>
     );
   };
-  const renderFlatlistItem = ({item, index}) => {
+  const renderFlatlistItem = ({ item, index }) => {
     const isSelected = index == selectedIndex;
     return (
       isExist(item) && (
         <TouchableOpacity
           disabled={disabledIndexs?.includes(index)}
           activeOpacity={0.8}
-          style={{...styles.dropdownRow, ...rowStyle, ...(isSelected && selectedRowStyle)}}
+          style={{ ...styles.dropdownRow, ...rowStyle, ...(isSelected && selectedRowStyle) }}
           onPress={() => onSelectItem(item, index)}>
           {renderCustomizedRowChild ? (
             <View style={styles.dropdownCustomizedRowParent}>{renderCustomizedRowChild(item, index, isSelected)}</View>
@@ -154,7 +160,7 @@ const SelectDropdown = (
             <Text
               numberOfLines={1}
               allowFontScaling={false}
-              style={{...styles.dropdownRowText, ...rowTextStyle, ...(isSelected && selectedRowTextStyle)}}>
+              style={{ ...styles.dropdownRowText, ...rowTextStyle, ...(isSelected && selectedRowTextStyle) }}>
               {rowTextForSelection ? rowTextForSelection(item, index) : item.toString()}
             </Text>
           )}
@@ -168,15 +174,18 @@ const SelectDropdown = (
         <DropdownModal statusBarTranslucent={statusBarTranslucent} visible={isVisible}>
           <DropdownOverlay onPress={closeDropdown} backgroundColor={dropdownOverlayColor} />
           <DropdownWindow layoutStyle={dropdownWindowStyle}>
-            <FlatList
+            <VirtualizedList
               data={dataArr}
-              keyExtractor={(item, index) => index.toString()}
+              initialNumToRender={5}
+              getItem={(data, index) => data[index]}
+              getItemCount={data => data.length}
+              keyExtractor={(_, index) => index.toString()}
               ref={dropDownFlatlistRef}
               renderItem={renderFlatlistItem}
               getItemLayout={getItemLayout}
               onLayout={onLayout}
               ListHeaderComponent={renderSearchView()}
-              stickyHeaderIndices={search && [0]}
+              stickyHeaderIndices={true && [0]}
               keyboardShouldPersistTaps="always"
               onEndReached={() => onScrollEndReached && onScrollEndReached()}
               onEndReachedThreshold={0.5}
@@ -187,6 +196,8 @@ const SelectDropdown = (
     );
   };
   ///////////////////////////////////////////////////////
+  const borderColor = errors ? 'red' : '#000';
+  const textColor = errors ? 'red' : '#000';
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -197,15 +208,16 @@ const SelectDropdown = (
         ...styles.dropdownButton,
         ...(dropdownIconPosition == 'left' ? styles.row : styles.rowRevese),
         ...buttonStyle,
+        borderColor: borderColor,
       }}>
+      {leftIcon ? leftIcon : ''}
       {renderDropdown()}
-      {renderDropdownIcon && renderDropdownIcon(isVisible)}
       {renderCustomizedButtonChild ? (
         <View style={styles.dropdownCustomizedButtonParent}>
           {renderCustomizedButtonChild(selectedItem, selectedIndex)}
         </View>
       ) : (
-        <Text numberOfLines={1} allowFontScaling={false} style={{...styles.dropdownButtonText, ...buttonTextStyle}}>
+        <Text numberOfLines={1} allowFontScaling={false} style={{ ...styles.dropdownButtonText, ...buttonTextStyle, color: textColor }}>
           {isExist(selectedItem)
             ? buttonTextAfterSelection
               ? buttonTextAfterSelection(selectedItem, selectedIndex)
@@ -213,6 +225,7 @@ const SelectDropdown = (
             : defaultButtonText || 'Select an option.'}
         </Text>
       )}
+      {renderDropdownIcon && renderDropdownIcon(isVisible)}
     </TouchableOpacity>
   );
 };

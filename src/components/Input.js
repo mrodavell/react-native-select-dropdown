@@ -1,14 +1,13 @@
 import React from 'react';
-import {forwardRef} from 'react';
-import {View, TextInput, StyleSheet, I18nManager} from 'react-native';
+import { forwardRef } from 'react';
+import { View, StyleSheet, I18nManager, TextInput } from 'react-native';
 
-const voidFunction = () => {};
+const voidFunction = () => { };
 
 const Input = (
   {
     searchViewWidth,
     inputStyle,
-    inputTextStyle,
     value,
     valueColor,
     placeholder,
@@ -25,7 +24,6 @@ const Input = (
 ) => {
   const defaults = {
     inputStyle: inputStyle,
-    inputTextStyle: inputTextStyle,
     value: value ?? '',
     valueColor: valueColor ?? '#000000',
     placeholder: placeholder ?? '',
@@ -50,7 +48,7 @@ const Input = (
   };
 
   return (
-    <View style={{...styles.searchViewStyle, ...{width: searchViewWidth}}}>
+    <View style={{ ...styles.searchViewStyle, ...{ width: searchViewWidth } }}>
       <View
         style={{
           ...styles.defaultInputStyle,
@@ -68,14 +66,14 @@ const Input = (
           onEndEditing={defaults.onEndEditing}
           onSubmitEditing={defaults.onSubmitEditing}
           //
-          style={{...styles.inputField, color: defaults.valueColor, ...defaults.inputTextStyle}}
+          style={{ ...styles.inputField, color: defaults.valueColor }}
           returnKeyType={'done'}
           textContentType={'oneTimeCode'}
           allowFontScaling={false}
           autoComplete={'off'}
           autoCorrect={false}
           autoCapitalize={'none'}
-          autoFocus={true}
+          autoFocus={false}
         />
         {defaults.renderRight && <View style={styles.pressableRight}>{defaults.renderRight()}</View>}
       </View>
